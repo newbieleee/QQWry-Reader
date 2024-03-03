@@ -39,8 +39,9 @@ type indexRecord struct {
 }
 
 type Record struct {
-    Country []byte
-    Region  []byte
+    Country  []byte
+    Region   []byte
+    Location []byte
 }
 
 func (i indexMeta) calcOffset(index int64) int64 {
@@ -49,7 +50,7 @@ func (i indexMeta) calcOffset(index int64) int64 {
 
 var (
     UnknownText          = []byte("未知")
-    DefaultUnknownRegion = []byte{67, 90, 56, 56, 46, 78, 69, 84} // 未知地区为CZ88.NET
+    DefaultUnknownRegion = []byte{32, 67, 90, 56, 56, 46, 78, 69, 84} // 未知地区为[ CZ88.NET]
 
     ErrIP       = errors.New("IP不正确")
     ErrNotFound = errors.New("未找到IP记录")
@@ -82,7 +83,7 @@ func (data *Data) Query(ip string) (Record, error) {
         }
         switch {
         case midRecord.ipBegin > ipInt:
-            right = mid + 1
+            right = mid - 1
         case midRecord.ipBegin == ipInt:
             return data.readRecord(midRecord.offset + ipSize)
         default:
@@ -127,17 +128,25 @@ func (data *Data) readRecord(pos int64) (res Record, err error) {
         err = ErrDecode
         return
     }
-    return Record{country, replaceUnknownChars(region)}, nil
+    region = replaceUnknownChars(region)
+    location := make([]byte, len(country)+len(region))
+    n := copy(location, country)
+    copy(location[n:], region)
+    return Record{country, region, location}, nil
 }
 
 func replaceUnknownChars(chars []byte) []byte {
-    if len(chars) != 8 {
+    if len(chars) != len(DefaultUnknownRegion) {
         return chars
     }
+    n := 0
     for i := range chars {
-        if chars[i] != DefaultUnknownRegion[i] {
-            return UnknownText
+        if chars[i] == DefaultUnknownRegion[i] {
+            n++
         }
+    }
+    if n == len(DefaultUnknownRegion) {
+        return UnknownText
     }
     return chars
 }

@@ -21,8 +21,5 @@ func TestData_Query(t *testing.T) {
         t.Error("unexpected region")
     }
 
-    location := make([]byte, len(r.Country)+len(r.Region))
-    n := copy(location, r.Country)
-    copy(location[n:], r.Region)
-    fmt.Println(string(location))
+    fmt.Println(string(r.Location))
 }
