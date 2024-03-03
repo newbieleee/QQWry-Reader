@@ -222,10 +222,6 @@ func (data *Data) loadFile() error {
     return nil
 }
 
-func (data *Data) ReplaceUnknownFlag() {
-
-}
-
 func New(filename string) (*Data, error) {
     path := filepath.Clean(filename)
     path, err := filepath.Abs(path)
