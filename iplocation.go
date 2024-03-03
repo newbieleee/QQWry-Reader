@@ -38,9 +38,9 @@ type indexRecord struct {
     offset  int64
 }
 
-type IPRecord struct {
-    country []byte
-    region  []byte
+type Record struct {
+    Country []byte
+    Region  []byte
 }
 
 func (i indexMeta) calcOffset(index int64) int64 {
@@ -56,14 +56,14 @@ var (
     ErrDecode   = errors.New("已找到记录，转码出现错误")
 )
 
-func (data *Data) Query(ip string) (IPRecord, error) {
+func (data *Data) Query(ip string) (Record, error) {
     ipBytes := net.ParseIP(ip)
     if ipBytes == nil {
-        return IPRecord{}, ErrIP
+        return Record{}, ErrIP
     }
     err := data.loadFile()
     if err != nil {
-        return IPRecord{}, err
+        return Record{}, err
     }
     defer func() {
         _ = data.source.Close()
@@ -78,7 +78,7 @@ func (data *Data) Query(ip string) (IPRecord, error) {
         off := data.meta.calcOffset(mid)
         midRecord, err := data.readIndex(off)
         if err != nil {
-            return IPRecord{}, err
+            return Record{}, err
         }
         switch {
         case midRecord.ipBegin > ipInt:
@@ -88,7 +88,7 @@ func (data *Data) Query(ip string) (IPRecord, error) {
         default:
             ipEnd, err := data.readIP(midRecord.offset)
             if err != nil {
-                return IPRecord{}, err
+                return Record{}, err
             }
             if ipEnd >= ipInt {
                 return data.readRecord(midRecord.offset + ipSize)
@@ -96,7 +96,7 @@ func (data *Data) Query(ip string) (IPRecord, error) {
             left = mid + 1
         }
     }
-    return IPRecord{}, ErrNotFound
+    return Record{}, ErrNotFound
 }
 
 func (data *Data) readIP(pos int64) (uint32, error) {
@@ -108,7 +108,7 @@ func (data *Data) readIP(pos int64) (uint32, error) {
     return binary.LittleEndian.Uint32(buf), nil
 }
 
-func (data *Data) readRecord(pos int64) (res IPRecord, err error) {
+func (data *Data) readRecord(pos int64) (res Record, err error) {
     countryGBK, off, err := data.readString(pos)
     if err != nil {
         return
@@ -127,7 +127,7 @@ func (data *Data) readRecord(pos int64) (res IPRecord, err error) {
         err = ErrDecode
         return
     }
-    return IPRecord{country, replaceUnknownChars(region)}, nil
+    return Record{country, replaceUnknownChars(region)}, nil
 }
 
 func replaceUnknownChars(chars []byte) []byte {

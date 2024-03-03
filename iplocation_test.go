@@ -1,6 +1,7 @@
 package ip
 
 import (
+    `fmt`
     `testing`
 )
 
@@ -13,10 +14,15 @@ func TestData_Query(t *testing.T) {
     if err != nil {
         panic(err)
     }
-    if string(r.country) != "美国" {
+    if string(r.Country) != "美国" {
         t.Error("unexpected country")
     }
-    if string(r.region) != "APNIC&CloudFlare公共DNS服务器" {
+    if string(r.Region) != "APNIC&CloudFlare公共DNS服务器" {
         t.Error("unexpected region")
     }
+
+    location := make([]byte, len(r.Country)+len(r.Region))
+    n := copy(location, r.Country)
+    copy(location[n:], r.Region)
+    fmt.Println(string(location))
 }
