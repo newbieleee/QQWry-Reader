@@ -4,9 +4,8 @@ import (
     `bufio`
     `encoding/binary`
     `errors`
+    `io`
     `net`
-    `os`
-    `path/filepath`
 
     `golang.org/x/text/encoding/simplifiedchinese`
 )
@@ -21,10 +20,18 @@ const (
     redirectString   byte  = 2 // 该模式一定指向字符串
 )
 
+type Source interface {
+    Open() error
+    io.Reader
+    io.ReaderAt
+    io.Seeker
+    io.Closer
+}
+
 type Data struct {
-    FilePath string
-    source   *os.File
-    meta     indexMeta
+    source  Source
+    meta    indexMeta
+    version string
 }
 
 type indexMeta struct {
@@ -49,12 +56,15 @@ func (i indexMeta) calcOffset(index int64) int64 {
 }
 
 var (
+    VersionIPBegin uint32 = 4294967040
+    VersionIPEnd   uint32 = 4294967295
+
     UnknownText          = []byte("未知")
     DefaultUnknownRegion = []byte{32, 67, 90, 56, 56, 46, 78, 69, 84} // 未知地区为[ CZ88.NET]
 
     ErrIP       = errors.New("IP不正确")
     ErrNotFound = errors.New("未找到IP记录")
-    ErrDecode   = errors.New("已找到记录，转码出现错误")
+    ErrDecode   = errors.New("已找到记录，编码解析错误")
 )
 
 func (data *Data) Query(ip string) (Record, error) {
@@ -62,14 +72,12 @@ func (data *Data) Query(ip string) (Record, error) {
     if ipBytes == nil {
         return Record{}, ErrIP
     }
-    err := data.loadFile()
-    if err != nil {
-        return Record{}, err
-    }
-    defer func() {
-        _ = data.source.Close()
-    }()
     ipInt := binary.BigEndian.Uint32(ipBytes.To4())
+    if ipInt >= VersionIPBegin && ipInt <= VersionIPEnd {
+        r := Record{Country: []byte("保留地址")}
+        r.Location = r.Country
+        return r, nil
+    }
     var (
         left  int64
         right = int64(data.meta.total - 1)
@@ -175,11 +183,11 @@ func (data *Data) readString(pos int64) (result []byte, nextOffset int64, err er
             nextOffset = pos + redirectFlagSize + offsetSize
             pos = off
         default:
-            _, err = data.source.Seek(pos, 0)
-            if err != nil {
-                return
-            }
-            result, err = bufio.NewReader(data.source).ReadBytes(0)
+            // _, err = data.source.Seek(pos, io.SeekStart)
+            // if err != nil {
+            //     return
+            // }
+            result, err = bufio.NewReader(&concurrencyReader{reader: data.source, pos: pos}).ReadBytes(0)
             if err != nil {
                 return
             }
@@ -212,17 +220,16 @@ func (data *Data) readIndex(pos int64) (indexRecord, error) {
     }, nil
 }
 
-func (data *Data) loadFile() error {
-    f, err := os.OpenFile(data.FilePath, os.O_RDONLY, 0644)
+func (data *Data) loadSource() error {
+    err := data.source.Open()
     if err != nil {
         return err
     }
     buf := make([]byte, indexOffsetSize*2)
-    _, err = f.Read(buf)
+    _, err = data.source.Read(buf)
     if err != nil {
         return err
     }
-    data.source = f
     data.meta = indexMeta{
         begin: binary.LittleEndian.Uint32(buf[:indexOffsetSize]),
         end:   binary.LittleEndian.Uint32(buf[indexOffsetSize:]),
@@ -231,11 +238,48 @@ func (data *Data) loadFile() error {
     return nil
 }
 
-func New(filename string) (*Data, error) {
-    path := filepath.Clean(filename)
-    path, err := filepath.Abs(path)
+func (data *Data) loadVersion() error {
+    index, err := data.readIndex(int64(data.meta.end))
+    if err != nil {
+        return err
+    }
+    r, err := data.readRecord(index.offset)
+    if err != nil {
+        return err
+    }
+    v := make([]byte, 8)
+    off := 0
+    for _, b := range r.Region {
+        if b >= 48 && b <= 57 {
+            v[off] = b
+            off++
+        }
+    }
+    data.version = string(v[:off])
+    return nil
+}
+
+func (data *Data) Version() string {
+    return data.version
+}
+
+func (data *Data) Close() error {
+    return data.source.Close()
+}
+
+func New(builder Builder) (*Data, error) {
+    data := &Data{}
+    err := builder.build(data)
     if err != nil {
         return nil, err
     }
-    return &Data{FilePath: path}, nil
+    err = data.loadSource()
+    if err != nil {
+        return nil, err
+    }
+    err = data.loadVersion()
+    if err != nil {
+        return nil, err
+    }
+    return data, nil
 }
