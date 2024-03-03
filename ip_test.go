@@ -42,6 +42,7 @@ func TestFileMode_Query(t *testing.T) {
     e := time.Since(s)
 
     fmt.Println("文件模式查询10万次耗时:", e)
+    _ = q.Close()
 }
 
 func TestFileMode_Query_Concurrency(t *testing.T) {
@@ -74,6 +75,7 @@ func TestFileMode_Query_Concurrency(t *testing.T) {
     e := time.Since(s)
 
     fmt.Println("文件模式并发查询10万次耗时:", e)
+    _ = q.Close()
 }
 
 func TestMemMode_Query(t *testing.T) {
@@ -109,6 +111,7 @@ func TestMemMode_Query(t *testing.T) {
     e := time.Since(s)
 
     fmt.Println("内存模式查询1百万次耗时:", e)
+    _ = q.Close()
 }
 
 func TestMemMode_Query_Concurrency(t *testing.T) {
@@ -141,4 +144,5 @@ func TestMemMode_Query_Concurrency(t *testing.T) {
     e := time.Since(s)
 
     fmt.Println("内存模式并发查询1百万次耗时:", e)
+    _ = q.Close()
 }
