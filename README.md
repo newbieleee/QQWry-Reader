@@ -6,21 +6,15 @@
 ## Example
 ```Go
 func main() {
-    data, err := ip.New(`./qqwry.dat`)
+    q, err := New(`./qqwry.dat`)
     if err != nil {
         panic(err)
     }
-    r, err := data.Query("1.0.0.1")
+    r, err := q.Query("1.0.0.1")
     if err != nil {
         panic(err)
     }
-    // 按字段输出
-    fmt.Printf("国家: %s\n地区: %s", r.Country, r.Region)
     
-    // 合并输出
-    location := make([]byte, len(r.Country)+len(r.Region))
-    n := copy(location, r.Country)
-    copy(location[n:], r.Region)
-    fmt.Println(string(location))
+    fmt.Printf("国家: %s\n地区: %s\n合并: %s", r.Country, r.Region, r.Location)
 }
 ```
