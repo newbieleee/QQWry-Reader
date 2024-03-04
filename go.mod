@@ -1,4 +1,4 @@
-module github.com/newbieleee/QQWry-Reader
+module github.com/ryanexo/QQWry-Reader
 
 go 1.20
 
