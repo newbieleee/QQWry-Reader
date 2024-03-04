@@ -1,12 +1,12 @@
 # 纯真IP数据库QQWry.dat读取工具
 
 ## 使用
-`go get github.com/newbieleee/QQWry-Reader`
+`go get github.com/ryanexo/QQWry-Reader`
 
 ## 示例
 ```Go
 func main() {
-    q, err := New(`./qqwry.dat`)
+    q, err := ip.New(ip.WithMemoryMode("./qqwry.dat"))
     if err != nil {
         panic(err)
     }
@@ -15,13 +15,14 @@ func main() {
         panic(err)
     }
     
-    fmt.Printf("国家: %s\n地区: %s\n合并: %s", r.Country, r.Region, r.Location)
+    fmt.Printf("国家: %s\n地区: %s\n合并: %s\n", r.Country, r.Region, r.Location)
+    fmt.Printf("IP库版本号: %s", q.Version())
 }
 ```
 
 ***
 ## 并发安全
-**测试设备i5-12490F，内存3600Mhz 16G*2，已进行并发测试未发现问题**
+测试设备i5-12490F，内存3600Mhz 16G*2，已进行并发测试未发现问题
 
 ## 查询效率（基于上述设备）
 
