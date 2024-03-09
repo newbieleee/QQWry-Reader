@@ -23,7 +23,6 @@ const (
 type Source interface {
 	io.Reader
 	io.ReaderAt
-	io.Seeker
 	io.Closer
 }
 
@@ -128,6 +127,7 @@ func (data *Data) readRecord(pos int64) (res Record, err error) {
 	decoder := simplifiedchinese.GBK.NewDecoder()
 	country, err := decoder.Bytes(countryGBK[:len(countryGBK)-1])
 	if err != nil {
+		err = ErrDecode
 		return
 	}
 	region, err := decoder.Bytes(regionGBK[:len(regionGBK)-1])
@@ -182,10 +182,6 @@ func (data *Data) readString(pos int64) (result []byte, nextOffset int64, err er
 			nextOffset = pos + redirectFlagSize + offsetSize
 			pos = off
 		default:
-			// _, err = data.source.Seek(pos, io.SeekStart)
-			// if err != nil {
-			//     return
-			// }
 			result, err = bufio.NewReader(&concurrencyReader{reader: data.source, pos: pos}).ReadBytes(0)
 			if err != nil {
 				return
