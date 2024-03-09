@@ -1,10 +1,13 @@
-# 纯真IP数据库QQWry.dat读取工具
+### 简介
+高性能的离线IP归属地查询库，数据源来自[纯真IP数据库](https://www.cz88.net/)。
 
-## 使用
-`go get github.com/ryanexo/QQWry-Reader`
+### 使用
+```
+go get github.com/ryanexo/QQWry-Reader
+```
 
-## 示例
-```Go
+### 示例
+```go
 func main() {
     q, err := ip.New(ip.WithMemoryMode("./qqwry.dat"))
     if err != nil {
@@ -20,16 +23,31 @@ func main() {
 }
 ```
 
-***
-## 并发安全
-测试设备i5-12490F，内存3600Mhz 16G*2，已进行并发测试未发现问题
+### 并发安全
+使用goroutine模拟并发未发生竟态
 
-## 查询效率（基于上述设备）
+### 测试
 
-文件模式查询10万次耗时: **7.6896057s**
+内存模式下单次查询为10微秒级别，文件模式下单次查询为100微秒级别
 
-文件模式并发查询10万次耗时: **13.1974191s**
+```text
+=== RUN   TestFileMode_Query
+--- PASS: TestFileMode_Query (0.00s)
+=== RUN   TestFileMode_Query_Concurrency_Times10000
+--- PASS: TestFileMode_Query_Concurrency_Times10000 (1.46s)
+=== RUN   TestMemMode_Query
+--- PASS: TestMemMode_Query (0.00s)
+=== RUN   TestMemMode_Query_Concurrency_Times10000
+--- PASS: TestMemMode_Query_Concurrency_Times10000 (0.06s)
+```
 
-内存模式查询1百万次耗时: **3.5238938s**
-
-内存模式并发查询1百万次耗时: **2.2537558s**
+```text
+goos: windows
+goarch: amd64
+pkg: github.com/ryanexo/QQWry-Reader
+cpu: 12th Gen Intel(R) Core(TM) i5-12400F
+BenchmarkData_Query
+BenchmarkData_Query-12             16491             72876 ns/op            8675 B/op         44 allocs/op
+BenchmarkData_Query_Mem
+BenchmarkData_Query_Mem-12        527658              2158 ns/op            8675 B/op         44 allocs/op
+```
