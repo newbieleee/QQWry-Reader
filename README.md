@@ -6,6 +6,12 @@
 go get github.com/ryanexo/QQWry-Reader
 ```
 
+#### 下载数据库文件
+安全原因，库不提供远程下载功能，请[点此下载数据库文件](https://github.com/ryanexo/QQWry-Reader/releases/tag/1.2)
+```text
+https://github.com/ryanexo/QQWry-Reader/releases/tag/1.2
+```
+
 ### 示例
 ```go
 func main() {
