@@ -21,7 +21,6 @@ const (
 )
 
 type Source interface {
-	Open() error
 	io.Reader
 	io.ReaderAt
 	io.Seeker
@@ -221,12 +220,8 @@ func (data *Data) readIndex(pos int64) (indexRecord, error) {
 }
 
 func (data *Data) loadSource() error {
-	err := data.source.Open()
-	if err != nil {
-		return err
-	}
 	buf := make([]byte, indexOffsetSize*2)
-	_, err = data.source.Read(buf)
+	_, err := data.source.Read(buf)
 	if err != nil {
 		return err
 	}
