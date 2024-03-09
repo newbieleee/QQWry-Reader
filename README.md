@@ -7,9 +7,9 @@ go get github.com/ryanexo/QQWry-Reader
 ```
 
 #### 下载数据库文件
-安全原因，库不提供远程下载功能，请[点此下载数据库文件](https://github.com/ryanexo/QQWry-Reader/releases/tag/1.2)
+安全原因，库不提供远程下载功能，请[点此下载数据库文件](https://github.com/ryanexo/QQWry-Reader/releases/tag/DB20240221)或复制下方链接
 ```text
-https://github.com/ryanexo/QQWry-Reader/releases/tag/1.2
+https://github.com/ryanexo/QQWry-Reader/releases/tag/DB20240221
 ```
 
 ### 示例
